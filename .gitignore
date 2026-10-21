@@ -1,0 +1,29 @@
+# Personal training data: never commit
+*.csv
+*.tsv
+*.xlsx
+
+# Backups / exports
+*backup*.json
+workout-log-*.json
+hevy-sync*.json
+*.bak
+
+# Anything that could hold keys or secrets
+.env
+.env.*
+*.key
+*.pem
+.hevy-key
+*secret*
+*apikey*
+*api-key*
+
+# Tooling / OS
+node_modules/
+.claude/
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

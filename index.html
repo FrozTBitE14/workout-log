@@ -1,0 +1,1210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<title>Workout Log</title>
+<style>
+:root{--bg:#0f1115;--card:#181b22;--card2:#232833;--line:#2c323e;--text:#e8eaf0;--muted:#9aa3b2;--accent:#4f8cff;--good:#2ecc71;--warn:#f5a623;--bad:#ff6b6b;--pr:#ffd34d;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+body{padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+body.timer-on{padding-bottom:calc(200px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:5;background:rgba(15,17,21,.96);padding:calc(8px + env(safe-area-inset-top)) 16px 8px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+header h1{font-size:18px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+main{max-width:720px;margin:0 auto;padding:14px 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+h2{font-size:17px;margin:2px 0 10px}h3{font-size:16px;margin:0}
+.muted{color:var(--muted)}.small{font-size:13px}.warn{color:var(--warn)}.good{color:var(--good)}
+button{appearance:none;border:0;border-radius:12px;min-height:48px;padding:0 16px;font:inherit;font-weight:600;color:var(--text);background:var(--card2);cursor:pointer;touch-action:manipulation}
+button:active{transform:scale(.98)}
+button:disabled{opacity:.5}
+.primary{background:var(--accent);color:#fff}.danger{background:#3a1d22;color:#ffb3b3}.ghost{background:transparent;border:1px solid var(--line)}
+.block{width:100%;display:block;margin-top:8px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.grow{flex:1;min-width:0}
+input,select{font:inherit;color:var(--text);background:#0b0d11;border:1px solid var(--line);border-radius:10px;min-height:48px;padding:0 12px;width:100%}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:0}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(5,1fr);background:#12151b;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{border-radius:0;background:transparent;min-height:62px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0}
+nav.tabs button.on{color:var(--accent)}
+nav.tabs .ic{font-size:21px;line-height:1}
+.hdr,.setrow{display:grid;grid-template-columns:48px 1fr 1fr 56px;gap:6px;align-items:center}
+.hdr{font-size:12px;color:var(--muted);text-align:center;margin-top:10px}
+.setrow{margin-top:6px}
+.setrow input{text-align:center;font-size:19px;font-weight:700;padding:0 4px}
+.setrow .tag{padding:0;font-size:15px}
+.setrow .tag.w{color:var(--warn);background:#2e2616}
+.setrow .chk{padding:0;font-size:22px}
+.setrow.done .chk{background:var(--good);color:#06210f}
+.setrow.done input{border-color:#245a3a;background:#0f1f16}
+.prs{grid-column:1/-1;min-height:0}
+.badge{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--pr);color:#2b2200;margin:2px 4px 0 0}
+.why{font-size:13px;color:var(--muted);margin-top:4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{min-height:40px;padding:0 12px;border-radius:999px;font-size:14px;font-weight:500}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.grid4 button{padding:0}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:14px}
+details>summary{cursor:pointer;list-style:none;min-height:44px;display:flex;align-items:center;gap:8px}
+details>summary::-webkit-details-marker{display:none}
+.item{border-top:1px solid var(--line);padding:6px 0}
+.item:first-of-type{border-top:0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{color:var(--muted);font-weight:600;font-size:12px}
+td input{min-height:40px;width:84px;text-align:center}
+#timer{position:fixed;left:0;right:0;bottom:calc(62px + env(safe-area-inset-bottom));z-index:7;background:#16233d;border-top:1px solid #2c4372;padding:10px 16px;display:none}
+#timer.on{display:block}
+#timer.zero{background:#173b26;border-color:#2d6b45}
+#timer .t{font-size:36px;font-weight:800;font-variant-numeric:tabular-nums}
+#timer .inner{max-width:720px;margin:0 auto}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--card);border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));width:100%;max-width:720px;max-height:85vh;overflow:auto}
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(64px + env(safe-area-inset-top));background:#222b3b;border:1px solid var(--line);padding:10px 16px;border-radius:12px;z-index:30;max-width:90vw}
+svg.chart{width:100%;height:auto;display:block;margin-top:6px}
+.res{padding:8px 0;border-top:1px solid var(--line)}.res:first-child{border-top:0}
+</style>
+</head>
+<body>
+<header><h1 id="title">Workout Log</h1><button class="ghost" data-act="timerOpen" aria-label="Rest timer">⏱</button></header>
+<main id="main"></main>
+<div id="timer"><div class="inner">
+  <div class="row"><div class="t grow" id="tleft">0:00</div>
+    <button data-act="tadd" data-s="-15">−15</button><button data-act="tadd" data-s="15">+15</button><button data-act="tstop" aria-label="Close timer">✕</button></div>
+  <div class="grid4" style="margin-top:8px"><button data-act="tpreset" data-s="60">60s</button><button data-act="tpreset" data-s="90">90s</button><button data-act="tpreset" data-s="120">120s</button><button data-act="tpreset" data-s="180">180s</button></div>
+</div></div>
+<nav class="tabs">
+  <button data-act="tab" data-tab="workout"><span class="ic">🏋️</span>Workout</button>
+  <button data-act="tab" data-tab="program"><span class="ic">🗓️</span>Program</button>
+  <button data-act="tab" data-tab="history"><span class="ic">📜</span>History</button>
+  <button data-act="tab" data-tab="exercises"><span class="ic">📈</span>Exercises</button>
+  <button data-act="tab" data-tab="settings"><span class="ic">⚙️</span>Settings</button>
+</nav>
+<datalist id="exnames"></datalist>
+
+<script>
+/* LOGIC START */
+var WL = (function () {
+  'use strict';
+  const MONTHS = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+  const round = (x, d = 2) => { const f = 10 ** d; return Math.round(x * f) / f; };
+  const pad = n => String(n).padStart(2, '0');
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const num = v => { if (v === '' || v == null) return null; const n = +v; return Number.isFinite(n) ? n : null; };
+  const fmt = x => x == null || !Number.isFinite(+x) ? '—' : String(round(+x, 1));
+
+  // ---- Core formulas ----
+  function epley(w, r) {
+    if (!(w > 0) || !(r > 0)) return 0;
+    return r === 1 ? w : w * (1 + r / 30);
+  }
+  function pctFor(r) { return r <= 1 ? 1 : 1 / (1 + r / 30); }
+  function roundToStep(x, step) {
+    if (!(step > 0)) return round(x);
+    return round(Math.round(round(x / step, 6)) * step);
+  }
+
+  // ---- Dates: workouts use local 'YYYY-MM-DDTHH:mm' keys (sortable, timezone-free) ----
+  function localKey(d) {
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function keyToDate(k) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(k || '');
+    return m ? new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)) : new Date(NaN);
+  }
+  function addDays(key, days) { const d = keyToDate(key); d.setDate(d.getDate() + days); return localKey(d); }
+  function parseHevyDate(s) {
+    const m = /^\s*(\d{1,2}) ([A-Za-z]{3}) (\d{4}),? (\d{1,2}):(\d{2})/.exec(s || '');
+    if (!m || !(m[2] in MONTHS)) return null;
+    return `${m[3]}-${pad(MONTHS[m[2]] + 1)}-${pad(+m[1])}T${pad(+m[4])}:${m[5]}`;
+  }
+  const byDate = (a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+
+  // ---- Exercise classification ----
+  function detectEquipment(name) {
+    const n = name.toLowerCase();
+    const paren = /\((barbell|dumbbell|cable|machine|machine plates|smith machine)\)/.exec(n);
+    if (paren) return paren[1] === 'barbell' || paren[1] === 'dumbbell' || paren[1] === 'cable' ? paren[1] : 'machine';
+    if (/cable|pushdown|face pull|rope/.test(n)) return 'cable';
+    if (/barbell|\bt[ -]?bar\b|\bez[ -]?bar\b/.test(n)) return 'barbell';
+    if (/dumbbell/.test(n)) return 'dumbbell';
+    if (/machine|plates|smith/.test(n)) return 'machine';
+    return 'other';
+  }
+  function detectKind(name, sets = []) {
+    if (/assisted/i.test(name)) return 'assisted';
+    const W = sets.filter(s => !s.warmup);
+    if (W.length) {
+      const timed = W.filter(s => (s.dur > 0 || s.dist > 0) && !(s.r > 0)).length;
+      if (timed > W.length / 2) return 'cardio';
+      const withReps = W.filter(s => s.r > 0);
+      if (withReps.length && withReps.every(s => !(s.w > 0))) return 'bodyweight';
+    }
+    return 'weighted';
+  }
+  const isWorking = s => !!s && !s.warmup && s.done !== false && s.r > 0;
+  // Assisted: the load moved is bodyweight minus assistance.
+  function loadOf(kind, w, bw) {
+    if (kind === 'assisted') return bw == null ? null : Math.max(0, bw - (w || 0));
+    return w || 0;
+  }
+
+  // ---- CSV ----
+  function parseCSV(text) {
+    text = String(text || '').replace(/^﻿/, '');
+    const rows = []; let row = [], f = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c;
+      } else if (c === '"') q = true;
+      else if (c === ',') { row.push(f); f = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(f); rows.push(row); row = []; f = '';
+      } else f += c;
+    }
+    if (f !== '' || row.length) { row.push(f); rows.push(row); }
+    const head = (rows.shift() || []).map(h => h.trim());
+    return rows.filter(r => r.length > 1 || r[0] !== '').map(r => Object.fromEntries(head.map((h, i) => [h, r[i] ?? ''])));
+  }
+  const workoutId = (date, title) => `${date}|${title}`;
+
+  function importHevyRows(rows) {
+    const byId = new Map(), out = [];
+    for (const x of rows) {
+      const date = parseHevyDate(x.start_time);
+      const name = (x.exercise_title || '').trim();
+      if (!date || !name) continue;
+      const title = (x.title || '').trim() || 'Workout';
+      const id = workoutId(date, title);
+      let w = byId.get(id);
+      if (!w) { w = { id, date, title, source: 'hevy', exercises: [] }; byId.set(id, w); out.push(w); }
+      const idx = num(x.set_index) ?? 0;
+      // Continue the latest block of this exercise unless set_index restarts (a repeated block).
+      let ex = null;
+      for (let k = w.exercises.length - 1; k >= 0; k--) if (w.exercises[k].name === name) { ex = w.exercises[k]; break; }
+      if (!ex || idx <= ex._last) {
+        const occ = w.exercises.filter(e => e.name === name).length;
+        ex = { name, occ, sets: [], _last: -1 };
+        w.exercises.push(ex);
+      }
+      ex._last = idx;
+      ex.sets.push({
+        id: `${id}|${name}|${ex.occ}|${idx}`, w: num(x.weight_lbs), r: num(x.reps),
+        warmup: /warm/i.test(x.set_type || ''), type: x.set_type || 'normal',
+        rpe: num(x.rpe), dist: num(x.distance_km), dur: num(x.duration_seconds), done: true,
+      });
+    }
+    out.forEach(w => w.exercises.forEach(e => delete e._last));
+    return out.sort(byDate);
+  }
+  function parseHevyWorkoutsCSV(text) { return importHevyRows(parseCSV(text)); }
+
+  // Hevy API workout (weights in kg, ISO UTC times) -> same shape and ids as the CSV import.
+  function fromHevyApi(w) {
+    const date = localKey(new Date(w.start_time));
+    const title = (w.title || '').trim() || 'Workout';
+    const id = workoutId(date, title);
+    const counts = {};
+    return {
+      id, date, title, source: 'hevy',
+      exercises: (w.exercises || []).map(e => {
+        const name = (e.title || '').trim();
+        const occ = counts[name] = (counts[name] ?? -1) + 1;
+        return {
+          name, occ, sets: (e.sets || []).map((s, i) => {
+            const idx = s.index ?? i;
+            return {
+              id: `${id}|${name}|${occ}|${idx}`, w: s.weight_kg == null ? null : round(s.weight_kg * 2.20462262),
+              r: s.reps ?? null, warmup: s.type === 'warmup', type: s.type || 'normal', rpe: s.rpe ?? null,
+              dist: s.distance_meters == null ? null : round(s.distance_meters / 1000, 3), dur: s.duration_seconds ?? null, done: true,
+            };
+          }),
+        };
+      }),
+    };
+  }
+
+  function mergeWorkouts(existing, incoming) {
+    const result = existing.map(clone);
+    const map = new Map(result.map(w => [w.id, w]));
+    let added = 0, addedSets = 0;
+    for (const w of incoming) {
+      const cur = map.get(w.id);
+      if (!cur) { const c = clone(w); map.set(c.id, c); result.push(c); added++; continue; }
+      const have = new Set(cur.exercises.flatMap(e => e.sets.map(s => s.id)).filter(Boolean));
+      for (const e of w.exercises) for (const s of e.sets) {
+        if (s.id && have.has(s.id)) continue;
+        let ce = cur.exercises.find(x => x.name === e.name && (x.occ ?? 0) === (e.occ ?? 0));
+        if (!ce) { ce = { name: e.name, occ: e.occ ?? 0, sets: [] }; cur.exercises.push(ce); }
+        ce.sets.push({ ...s }); addedSets++;
+        if (s.id) have.add(s.id);
+      }
+    }
+    return { workouts: result.sort(byDate), added, addedSets };
+  }
+
+  // ---- Bodyweight ----
+  function parseMeasurements(text) {
+    return parseCSV(text)
+      .map(x => ({ date: (parseHevyDate(x.date) || '').slice(0, 10), w: num(x.weight_lbs) }))
+      .filter(x => x.date && x.w > 0)
+      .sort((a, b) => a.date < b.date ? -1 : 1);
+  }
+  function mergeBodyweights(a, b) {
+    const m = new Map((a || []).map(x => [x.date, x]));
+    for (const x of b || []) if (!m.has(x.date)) m.set(x.date, x);
+    return [...m.values()].sort((x, y) => x.date < y.date ? -1 : 1);
+  }
+  // Latest measurement on or before the date; earliest one if all are later.
+  function bwAt(bws, dateKey, fallback = null) {
+    if (!bws || !bws.length) return fallback;
+    const d = (dateKey || '').slice(0, 10);
+    let best = null;
+    for (const b of bws) { if (b.date <= d) best = b; else break; }
+    return (best || bws[0]).w;
+  }
+
+  // ---- Starting 1RMs ----
+  function startingOneRMs(workouts, kindOf, bws, o = {}) {
+    const weeks = o.recentWeeks ?? 12, ratio = o.outlierRatio ?? 1.4, factor = o.layoffFactor ?? 0.85, fb = o.bodyweight ?? null;
+    if (!workouts.length) return {};
+    const last = workouts.reduce((m, w) => w.date > m ? w.date : m, '');
+    const cutoff = addDays(last, -7 * weeks);
+    const acc = {};
+    for (const w of workouts) for (const e of w.exercises) {
+      const kind = kindOf(e.name);
+      if (kind !== 'weighted' && kind !== 'assisted') continue;
+      const bw = kind === 'assisted' ? bwAt(bws, w.date, fb) : null;
+      for (const s of e.sets) {
+        if (!isWorking(s) || s.r > 12) continue;
+        const load = loadOf(kind, s.w, bw);
+        if (!(load > 0)) continue;
+        const e1 = epley(load, s.r);
+        const r = acc[e.name] || (acc[e.name] = { allTime: 0, recent: 0 });
+        if (e1 > r.allTime) r.allTime = e1;
+        if (w.date >= cutoff && e1 > r.recent) r.recent = e1;
+      }
+    }
+    const out = {};
+    for (const [n, r] of Object.entries(acc)) {
+      const base = r.recent > 0 ? r.recent : r.allTime;
+      out[n] = {
+        allTime: round(r.allTime, 1), recent: r.recent > 0 ? round(r.recent, 1) : null,
+        source: r.recent > 0 ? 'recent' : 'all-time', base: round(base, 1),
+        flagged: r.recent > 0 && r.allTime > ratio * r.recent,
+        start: round(base * factor, 1), cutoff,
+      };
+    }
+    return out;
+  }
+
+  // ---- PRs ----
+  const METRICS = { weighted: [['weight', 1], ['e1rm', 1]], assisted: [['assist', -1], ['e1rm', 1]], bodyweight: [['reps', 1]], cardio: [] };
+  function setMetric(kind, m, s, bw) {
+    if (!isWorking(s)) return null;
+    if (m === 'weight') return s.w > 0 ? s.w : null;
+    if (m === 'reps') return s.r;
+    if (m === 'assist') return s.w || 0;
+    if (m === 'e1rm') {
+      if (s.r > 12) return null;
+      const L = loadOf(kind, s.w, bw);
+      return L > 0 ? round(epley(L, s.r), 1) : null;
+    }
+    return null;
+  }
+  // Compares one session's sets to the records from before it. Only the single best set per metric is marked.
+  function sessionPRs(kind, rec, sets, bw) {
+    const labels = new Map(), next = { ...rec };
+    for (const [m, dir] of METRICS[kind] || []) {
+      let best = null, bestV = null;
+      for (const s of sets) {
+        const v = setMetric(kind, m, s, bw);
+        if (v == null) continue;
+        if (bestV == null || (v - bestV) * dir > 0) { best = s; bestV = v; }
+      }
+      if (bestV == null) continue;
+      if (rec[m] != null && (bestV - rec[m]) * dir > 0) {
+        if (!labels.has(best)) labels.set(best, []);
+        labels.get(best).push(m);
+      }
+      if (next[m] == null || (bestV - next[m]) * dir > 0) next[m] = bestV;
+    }
+    return { labels, rec: next };
+  }
+  function sessionSummary(kind, sets, bw) {
+    const W = sets.filter(isWorking);
+    if (!W.length) return null;
+    const pt = { sets: W.length, totalReps: W.reduce((t, s) => t + s.r, 0), reps: Math.max(...W.map(s => s.r)) };
+    let e1 = 0;
+    for (const s of W) if (s.r <= 12) { const L = loadOf(kind, s.w, bw); if (L > 0) e1 = Math.max(e1, epley(L, s.r)); }
+    pt.e1rm = e1 ? round(e1, 1) : null;
+    if (kind === 'assisted') pt.assist = Math.min(...W.map(s => s.w || 0));
+    else pt.top = Math.max(...W.map(s => s.w || 0));
+    return pt;
+  }
+  function computeRecords(workouts, kindOf, bws, fb = null) {
+    const recs = {}, prs = {}, series = {};
+    for (const w of [...workouts].sort(byDate)) {
+      const groups = new Map();
+      for (const e of w.exercises) { if (!groups.has(e.name)) groups.set(e.name, []); groups.get(e.name).push(...e.sets); }
+      for (const [name, sets] of groups) {
+        const kind = kindOf(name);
+        const bw = kind === 'assisted' ? bwAt(bws, w.date, fb) : null;
+        const r = sessionPRs(kind, recs[name] || {}, sets, bw);
+        recs[name] = r.rec;
+        for (const [s, ls] of r.labels) if (s.id) prs[s.id] = ls;
+        const pt = sessionSummary(kind, sets, bw);
+        if (pt) (series[name] || (series[name] = [])).push({ date: w.date, ...pt });
+      }
+    }
+    return { recs, prs, series };
+  }
+
+  // ---- %1RM targets & double progression ----
+  // cfg = { sets, lo, hi, step }; prog = { weight, reps, stalls, lastTotal, lastWeight }
+  function targetFor(kind, oneRM, reps, step, bw) {
+    const pct = pctFor(reps), load = oneRM * pct;
+    if (kind === 'assisted') {
+      const assist = Math.max(0, roundToStep(bw - load, step));
+      return { weight: assist, load, pct };
+    }
+    return { weight: Math.max(0, roundToStep(load, step)), load, pct };
+  }
+  const freshProg = (weight, reps) => ({ weight, reps, stalls: 0, lastTotal: null, lastWeight: null });
+  function newCycle(kind, oneRM, cfg, bw) {
+    if (kind === 'bodyweight' || kind === 'cardio') return freshProg(0, cfg.lo);
+    if (oneRM == null || (kind === 'assisted' && bw == null)) return freshProg(null, cfg.lo);
+    return freshProg(targetFor(kind, oneRM, cfg.lo, cfg.step || 5, bw).weight, cfg.lo);
+  }
+  function explainProg(kind, oneRM, cfg, prog, bw) {
+    const range = `aim ${prog.reps} reps (range ${cfg.lo}–${cfg.hi})`;
+    const stall = prog.stalls ? ` · stall ${prog.stalls}/3` : '';
+    if (kind === 'bodyweight') return `Bodyweight · ${range}${stall}`;
+    if (kind === 'cardio') return 'Cardio';
+    if (prog.weight == null) return `No training 1RM yet. This session sets it · ${range}`;
+    const p = Math.round(pctFor(cfg.lo) * 100);
+    if (kind === 'assisted') {
+      if (bw == null || oneRM == null) return `Assist ${fmt(prog.weight)} lb (locked; set bodyweight for %1RM) · ${range}${stall}`;
+      return `1RM ${fmt(oneRM)} (BW ${fmt(bw)} − assist) × ${p}% for ${cfg.lo} reps → ${fmt(prog.weight)} lb assist (locked) · ${range}${stall}`;
+    }
+    if (oneRM == null) return `${fmt(prog.weight)} lb (locked) · ${range}${stall}`;
+    return `1RM ${fmt(oneRM)} × ${p}% for ${cfg.lo} reps → ${fmt(prog.weight)} lb (locked) · ${range}${stall}`;
+  }
+  function evaluateSession(kind, cfg, prog, oneRM, sets, bw) {
+    const W = sets.filter(isWorking);
+    if (!W.length || kind === 'cardio') return null;
+    const assisted = kind === 'assisted', step = cfg.step || 5;
+    // A set counts at the locked weight if it was at least that heavy (or no more assisted).
+    const meets = s => kind === 'bodyweight' || (assisted ? (s.w || 0) <= prog.weight + 1e-9 : (s.w || 0) >= prog.weight - 1e-9);
+    const atW = W.filter(meets);
+    const total = atW.reduce((t, s) => t + s.r, 0);
+    const hits = atW.filter(s => s.r >= prog.reps).length;
+    const allHit = cfg.sets > 0 && hits >= cfg.sets;
+    let e1 = null;
+    if (kind !== 'bodyweight') for (const s of W) { const L = loadOf(kind, s.w, bw); if (L > 0) e1 = Math.max(e1 ?? 0, epley(L, s.r)); }
+    if (e1 != null) e1 = round(e1, 1);
+    let p = { ...prog }, R = oneRM, action;
+    if (allHit && (kind === 'bodyweight' || prog.reps < cfg.hi)) {
+      p.reps = prog.reps + 1; p.stalls = 0; action = 'reps-up';
+    } else if (allHit) {
+      // Top of range on every set: new cycle from the capped e1RM, minimum one load step.
+      let w;
+      if (assisted && bw == null) w = Math.max(0, round(prog.weight - step));
+      else {
+        const base = R ?? e1 ?? 0;
+        R = round(Math.max(base, Math.min(e1 ?? base, base * 1.05)), 1);
+        w = targetFor(kind, R, cfg.lo, step, bw).weight;
+        if (assisted) { if (w > prog.weight - step) w = Math.max(0, round(prog.weight - step)); }
+        else if (w < prog.weight + step) w = round(prog.weight + step);
+      }
+      p = freshProg(w, cfg.lo); action = 'cycle-up';
+    } else {
+      const stalled = prog.lastTotal != null && prog.lastWeight === prog.weight && total <= prog.lastTotal;
+      p.stalls = stalled ? (prog.stalls || 0) + 1 : 0;
+      action = stalled ? 'stall' : 'hold';
+      if (p.stalls >= 3) {
+        action = 'deload';
+        if (kind === 'bodyweight') p = freshProg(0, cfg.lo);
+        else if (assisted && bw == null) p = freshProg(round(prog.weight + step), cfg.lo);
+        else if (R == null) p = freshProg(roundToStep(prog.weight * 0.9, step), cfg.lo);
+        else { R = round(R * 0.9, 1); p = freshProg(targetFor(kind, R, cfg.lo, step, bw).weight, cfg.lo); }
+      }
+    }
+    if (action !== 'cycle-up' && action !== 'deload') { p.lastTotal = total; p.lastWeight = prog.weight; }
+    return { prog: p, oneRM: R, action, e1rm: e1, total, hits };
+  }
+
+  // ---- Starter program from history ----
+  function quantile(arr, q) {
+    const a = [...arr].sort((x, y) => x - y);
+    if (!a.length) return null;
+    const pos = (a.length - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
+    return a[lo] + (a[hi] - a[lo]) * (pos - lo);
+  }
+  function draftProgram(workouts, kindOf, o = {}) {
+    const nDays = o.days ?? 5, minShare = o.minShare ?? 0.4, maxEx = o.maxExercises ?? 9;
+    const byTitle = new Map();
+    for (const w of workouts) { if (!byTitle.has(w.title)) byTitle.set(w.title, []); byTitle.get(w.title).push(w); }
+    const titles = [...byTitle.entries()]
+      .sort((a, b) => b[1].length - a[1].length || (a[1].at(-1).date < b[1].at(-1).date ? 1 : -1));
+    const days = titles.map(([title, ws]) => {
+      const stats = new Map();
+      for (const w of ws) {
+        const seen = new Set();
+        w.exercises.forEach((e, pos) => {
+          const st = stats.get(e.name) || { n: 0, pos: [], setCounts: [], reps: [] };
+          stats.set(e.name, st);
+          if (!seen.has(e.name)) { st.n++; st.pos.push(pos); st.setCounts.push(0); seen.add(e.name); }
+          const W = e.sets.filter(isWorking);
+          st.setCounts[st.setCounts.length - 1] += W.length;
+          W.forEach(s => st.reps.push(s.r));
+        });
+      }
+      const items = [...stats.entries()]
+        .filter(([name, st]) => st.n / ws.length >= minShare && kindOf(name) !== 'cardio' && st.reps.length)
+        .sort((a, b) => quantile(a[1].pos, 0.5) - quantile(b[1].pos, 0.5))
+        .slice(0, maxEx)
+        .map(([name, st]) => {
+          const lo = Math.max(1, Math.round(quantile(st.reps, 0.25)));
+          let hi = Math.min(30, Math.round(quantile(st.reps, 0.75)));
+          if (hi - lo < 2) hi = lo + 2;
+          const sets = Math.min(6, Math.max(1, Math.round(quantile(st.setCounts.filter(n => n > 0), 0.5) || 3)));
+          const eq = detectEquipment(name);
+          return { id: uid(), name, sets, lo, hi, rest: eq === 'barbell' ? 150 : 90, step: 5 };
+        });
+      return { id: uid(), name: title, items };
+    }).filter(d => d.items.length).slice(0, nDays);
+    return { days };
+  }
+
+  // ---- State ----
+  function defaultState() {
+    return {
+      version: 1,
+      settings: { bodyweight: null, bodyweightManual: false, layoffFactor: 0.85, recentWeeks: 12, outlierRatio: 1.4, defaultRest: 90, timerPreset: 90 },
+      exercises: {}, program: { days: [] }, progs: {}, workouts: [], bodyweights: [], active: null,
+    };
+  }
+  function normalize(s) {
+    const d = defaultState();
+    if (!s || typeof s !== 'object') return d;
+    return {
+      ...d, ...s,
+      settings: { ...d.settings, ...(s.settings || {}) },
+      program: s.program && Array.isArray(s.program.days) ? s.program : d.program,
+      exercises: s.exercises && typeof s.exercises === 'object' ? s.exercises : {},
+      progs: s.progs && typeof s.progs === 'object' ? s.progs : {},
+      workouts: Array.isArray(s.workouts) ? s.workouts : [],
+      bodyweights: Array.isArray(s.bodyweights) ? s.bodyweights : [],
+      active: s.active || null,
+    };
+  }
+
+  return {
+    epley, pctFor, roundToStep, round, fmt, uid, clone, num,
+    localKey, keyToDate, addDays, parseHevyDate, byDate,
+    detectEquipment, detectKind, isWorking, loadOf,
+    parseCSV, importHevyRows, parseHevyWorkoutsCSV, fromHevyApi, workoutId, mergeWorkouts,
+    parseMeasurements, mergeBodyweights, bwAt,
+    startingOneRMs, sessionPRs, computeRecords, sessionSummary,
+    targetFor, freshProg, newCycle, explainProg, evaluateSession,
+    quantile, draftProgram, defaultState, normalize,
+  };
+})();
+/* LOGIC END */
+</script>
+
+<script>
+(function () {
+  'use strict';
+  const KEY = 'workoutlog.v1';
+  const APIKEY = 'workoutlog.hevyApiKey'; // stored separately so it is never part of the state or exports
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fmt = WL.fmt;
+  const today = () => WL.localKey(new Date()).slice(0, 10);
+  const fmtDate = k => WL.keyToDate(k).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  const PR_LABEL = { weight: 'PR weight', e1rm: 'PR e1RM', reps: 'PR reps', assist: 'PR assist' };
+
+  let S = loadState();
+  const ui = { tab: 'workout', view: null, exName: null, histN: 30, q: '', startDate: today(), syncMsg: '' };
+  let cache = null;
+
+  function loadState() {
+    try { const raw = localStorage.getItem(KEY); if (raw) return WL.normalize(JSON.parse(raw)); } catch (e) { /* fall through */ }
+    return WL.defaultState();
+  }
+  function save() {
+    cache = null;
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('Could not save. Storage may be full.'); }
+  }
+  const kindOf = name => (S.exercises[name] && S.exercises[name].kind) || WL.detectKind(name);
+  const records = () => cache || (cache = WL.computeRecords(S.workouts, kindOf, S.bodyweights, S.settings.bodyweight));
+  const currentBW = () => S.settings.bodyweight ?? WL.bwAt(S.bodyweights, today(), null);
+  const allItems = () => S.program.days.flatMap(d => d.items);
+  const findItem = id => allItems().find(it => it.id === id);
+
+  function toast(msg, ms = 2600) {
+    const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t); setTimeout(() => t.remove(), ms);
+  }
+  function modal(html, buttons) {
+    return new Promise(res => {
+      const bg = document.createElement('div'); bg.className = 'modal-bg';
+      bg.innerHTML = `<div class="modal">${html}<div class="row" style="margin-top:14px">${buttons.map((b, i) => `<button class="grow ${b.cls || ''}" data-mi="${i}">${esc(b.label)}</button>`).join('')}</div></div>`;
+      bg.addEventListener('click', e => {
+        const b = e.target.closest('[data-mi]');
+        if (b) { bg.remove(); res(buttons[+b.dataset.mi].value); } else if (e.target === bg) { bg.remove(); res(null); }
+      });
+      document.body.appendChild(bg);
+    });
+  }
+  const confirmBox = (msg, ok = 'OK', cls = 'primary') => modal(`<p>${msg}</p>`, [{ label: 'Cancel', value: false }, { label: ok, value: true, cls }]);
+
+  // ---- Exercise bookkeeping ----
+  function ensureExercise(name) {
+    if (S.exercises[name]) return S.exercises[name];
+    const sets = S.workouts.flatMap(w => w.exercises.filter(e => e.name === name).flatMap(e => e.sets));
+    return (S.exercises[name] = { name, kind: WL.detectKind(name, sets), equipment: WL.detectEquipment(name), oneRM: null, start: null, edited: false });
+  }
+  function ensureAllExercises() {
+    const names = new Set(S.workouts.flatMap(w => w.exercises.map(e => e.name)));
+    names.forEach(ensureExercise);
+  }
+  function resetProgsFor(name) { allItems().filter(it => it.name === name).forEach(it => delete S.progs[it.id]); }
+  function applyStarting1RMs(overwriteEdited) {
+    const st = WL.startingOneRMs(S.workouts, kindOf, S.bodyweights, { ...S.settings });
+    for (const [name, r] of Object.entries(st)) {
+      const ex = ensureExercise(name);
+      ex.start = { ...r, flagged: r.flagged && !ex.flagCleared };
+      // Only seed missing 1RMs; progression owns them afterwards unless the user asks to recalculate.
+      if (ex.oneRM == null || overwriteEdited) {
+        if (ex.oneRM !== r.start) { ex.oneRM = r.start; resetProgsFor(name); }
+        if (overwriteEdited) ex.edited = false;
+      }
+    }
+  }
+  function getProg(it) {
+    let p = S.progs[it.id];
+    if (!p) {
+      const ex = S.exercises[it.name];
+      p = S.progs[it.id] = WL.newCycle(kindOf(it.name), ex ? ex.oneRM : null, it, currentBW());
+    }
+    return p;
+  }
+  function lastSession(name) {
+    for (let i = S.workouts.length - 1; i >= 0; i--) {
+      const sets = S.workouts[i].exercises.filter(e => e.name === name).flatMap(e => e.sets).filter(WL.isWorking);
+      if (sets.length) return { date: S.workouts[i].date, sets };
+    }
+    return null;
+  }
+  function refreshDatalist() {
+    const names = new Set([...Object.keys(S.exercises), ...allItems().map(i => i.name)]);
+    $('#exnames').innerHTML = [...names].sort().map(n => `<option value="${esc(n)}">`).join('');
+  }
+
+  // ---- Rest timer (timestamp based so it survives throttling / screen lock) ----
+  const T = { end: 0, paused: null, beeped: false, iv: null, hideAt: 0 };
+  let audio = null;
+  document.addEventListener('pointerdown', () => {
+    if (!audio) try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; }
+  }, { once: true });
+  function beep() {
+    try {
+      if (navigator.vibrate) navigator.vibrate([300, 120, 300]);
+      if (!audio) return;
+      [0, 0.35].forEach(off => {
+        const o = audio.createOscillator(), g = audio.createGain();
+        o.frequency.value = 880; o.connect(g); g.connect(audio.destination);
+        g.gain.setValueAtTime(0.25, audio.currentTime + off); g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + off + 0.3);
+        o.start(audio.currentTime + off); o.stop(audio.currentTime + off + 0.32);
+      });
+    } catch (e) { /* ignore */ }
+  }
+  function startTimer(sec) {
+    T.end = Date.now() + sec * 1000; T.paused = null; T.beeped = false; T.hideAt = 0;
+    $('#timer').classList.add('on'); document.body.classList.add('timer-on');
+    if (!T.iv) T.iv = setInterval(tick, 250);
+    tick();
+  }
+  function stopTimer() {
+    clearInterval(T.iv); T.iv = null;
+    $('#timer').classList.remove('on', 'zero'); document.body.classList.remove('timer-on');
+  }
+  function tick() {
+    const rem = Math.max(0, Math.ceil((T.end - Date.now()) / 1000));
+    $('#tleft').textContent = `${Math.floor(rem / 60)}:${String(rem % 60).padStart(2, '0')}${rem === 0 ? ' · Go!' : ''}`;
+    $('#timer').classList.toggle('zero', rem === 0);
+    if (rem === 0 && !T.beeped) { T.beeped = true; T.hideAt = Date.now() + 15000; beep(); }
+    if (T.hideAt && Date.now() > T.hideAt) stopTimer();
+  }
+  document.addEventListener('visibilitychange', () => { if (T.iv) tick(); });
+
+  // ---- Render ----
+  function render() {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === ui.tab));
+    const views = { workout: viewWorkout, program: viewProgram, history: viewHistory, exercises: viewExercises, settings: viewSettings };
+    $('#main').innerHTML = (views[ui.tab] || viewWorkout)();
+    $('#title').textContent = S.active && ui.tab === 'workout' ? (S.active.title || 'Workout') : { workout: 'Workout', program: ui.view === 'review' ? '1RM review' : 'Program', history: 'History', exercises: ui.exName || 'Exercises', settings: 'Settings' }[ui.tab];
+    refreshDatalist();
+    if (ui.tab === 'workout' && S.active) S.active.exercises.forEach((_, i) => refreshLive(i));
+  }
+
+  function viewWorkout() {
+    if (S.active) return viewSession();
+    const days = S.program.days;
+    const last = S.workouts[S.workouts.length - 1];
+    return `<div class="card"><h2>Start a workout</h2>
+      <label>Date</label><input type="date" data-bind="startDate" value="${esc(ui.startDate)}">
+      ${days.map(d => `<button class="primary block" data-act="startDay" data-id="${d.id}">${esc(d.name)} <span class="small">· ${d.items.length} exercises</span></button>`).join('')}
+      <button class="block" data-act="startEmpty">Empty workout</button>
+      ${days.length ? '' : `<p class="muted small">No program yet. Import your Hevy CSV in <b>Settings</b>, then draft a program in <b>Program</b>.</p>`}
+    </div>
+    ${last ? `<div class="card"><h3>Last workout</h3><div class="muted small">${esc(fmtDate(last.date))} · ${esc(last.title)} · ${last.exercises.length} exercises</div></div>` : ''}`;
+  }
+
+  function viewSession() {
+    const a = S.active;
+    const chips = recentNames(8).filter(n => !a.exercises.some(e => e.name === n));
+    return `<div class="card">
+        <label>Title</label><input data-bind="activeTitle" value="${esc(a.title)}">
+        <div class="muted small" style="margin-top:6px">${esc(fmtDate(a.date))}</div>
+      </div>
+      ${a.exercises.map(exCard).join('')}
+      <div class="card"><h3>Add exercise</h3>
+        <div class="row" style="margin-top:8px"><input class="grow" id="addExName" list="exnames" placeholder="Exercise name"><button class="primary" data-act="addEx">Add</button></div>
+        <div class="chips">${chips.map(n => `<button class="chip" data-act="addEx" data-name="${esc(n)}">${esc(n)}</button>`).join('')}</div>
+      </div>
+      <button class="primary block" data-act="finish" style="min-height:56px;font-size:18px">Finish workout</button>
+      <button class="danger block" data-act="discard">Discard workout</button>`;
+  }
+
+  function exCard(ex, i) {
+    const kind = kindOf(ex.name), it = ex.itemId && findItem(ex.itemId), E = S.exercises[ex.name] || {};
+    const bw = currentBW();
+    let why;
+    if (it) why = WL.explainProg(kind, E.oneRM, it, getProg(it), bw);
+    else {
+      const ls = lastSession(ex.name);
+      why = ls ? `Last (${fmtDate(ls.date)}): ${ls.sets.map(s => `${fmt(s.w)}×${s.r}`).join(', ')}` : 'New exercise';
+    }
+    const unit = kind === 'assisted' ? 'Assist lb' : kind === 'bodyweight' ? 'lb (BW=0)' : 'lb';
+    let n = 0;
+    const rows = ex.sets.map((s, j) => {
+      const label = s.warmup ? 'W' : String(++n);
+      return `<div class="setrow ${s.done ? 'done' : ''}">
+        <button class="tag ${s.warmup ? 'w' : ''}" data-act="toggleWarm" data-i="${i}" data-j="${j}" aria-label="Toggle warm-up">${label}</button>
+        <input inputmode="decimal" data-f="w" data-i="${i}" data-j="${j}" value="${s.w ?? ''}" placeholder="lb" aria-label="Weight">
+        <input inputmode="numeric" data-f="r" data-i="${i}" data-j="${j}" value="${s.r ?? ''}" placeholder="reps" aria-label="Reps">
+        <button class="chk" data-act="done" data-i="${i}" data-j="${j}" aria-label="Complete set">✓</button>
+        <div class="prs" data-pr="${i}-${j}"></div></div>`;
+    }).join('');
+    return `<div class="card">
+      <div class="row"><h3 class="grow">${esc(ex.name)}</h3><span class="small muted">rest ${ex.rest}s</span></div>
+      <div class="why">${esc(why)}</div>
+      ${kind === 'bodyweight' || kind === 'cardio' ? '' : `<div class="why">Live e1RM: <b data-live="${i}">—</b></div>`}
+      <div class="hdr"><div>Set</div><div>${unit}</div><div>Reps</div><div>Done</div></div>
+      ${rows}
+      <div class="grid4" style="margin-top:10px">
+        <button data-act="addSet" data-i="${i}">+ Set</button><button data-act="addWarm" data-i="${i}">+ Warm</button>
+        <button data-act="delSet" data-i="${i}">− Set</button><button class="danger" data-act="delEx" data-i="${i}">Remove</button>
+      </div></div>`;
+  }
+
+  function refreshLive(i) {
+    const ex = S.active && S.active.exercises[i];
+    if (!ex) return;
+    const kind = kindOf(ex.name), bw = currentBW();
+    const done = ex.sets.filter(s => s.done);
+    const live = $(`[data-live="${i}"]`);
+    if (live) {
+      let e1 = 0;
+      done.filter(WL.isWorking).forEach(s => { const L = WL.loadOf(kind, s.w, bw); if (L > 0) e1 = Math.max(e1, WL.epley(L, s.r)); });
+      live.textContent = e1 ? `${fmt(e1)} lb${kind === 'assisted' ? ' (effective)' : ''}` : '—';
+    }
+    const rec = records().recs[ex.name] || {};
+    const { labels } = WL.sessionPRs(kind, rec, done, bw);
+    ex.sets.forEach((s, j) => {
+      const el = $(`[data-pr="${i}-${j}"]`);
+      if (el) el.innerHTML = (labels.get(s) || []).map(m => `<span class="badge">🏆 ${PR_LABEL[m]}</span>`).join('');
+    });
+  }
+
+  function recentNames(n) {
+    const out = [];
+    for (let i = S.workouts.length - 1; i >= 0 && out.length < n; i--)
+      for (const e of S.workouts[i].exercises) if (!out.includes(e.name) && out.length < n) out.push(e.name);
+    return out;
+  }
+
+  function viewProgram() {
+    if (ui.view === 'review') return viewReview();
+    const days = S.program.days;
+    return `<div class="card"><h2>Program</h2>
+        <p class="muted small">Weight is set from your training 1RM at the bottom of each rep range and stays locked while reps climb.</p>
+        <div class="grid2"><button data-act="draft">Draft from Hevy history</button><button data-act="review">1RM review</button></div>
+      </div>
+      ${days.map((d, di) => `<div class="card">
+        <div class="row"><input class="grow" data-pd="${di}" data-k="name" value="${esc(d.name)}" aria-label="Day name"></div>
+        ${d.items.map((it, ii) => itemRow(it, di, ii)).join('')}
+        <div class="grid2" style="margin-top:8px"><button data-act="addItem" data-di="${di}">+ Exercise</button><button class="danger" data-act="delDay" data-di="${di}">Delete day</button></div>
+      </div>`).join('')}
+      <button class="primary block" data-act="addDay">+ Add day</button>`;
+  }
+  function itemRow(it, di, ii) {
+    const kind = kindOf(it.name), p = getProg(it);
+    const tgt = kind === 'bodyweight' ? `BW × ${p.reps}` : p.weight == null ? 'no 1RM' : `${fmt(p.weight)}${kind === 'assisted' ? ' assist' : ''} × ${p.reps}`;
+    const a = `data-di="${di}" data-ii="${ii}"`;
+    return `<details class="item"><summary><span class="grow"><b>${esc(it.name || 'New exercise')}</b><br><span class="small muted">${it.sets}×${it.lo}–${it.hi} · next ${tgt}${p.stalls ? ` · stall ${p.stalls}/3` : ''} · rest ${it.rest}s</span></span><span class="muted">▾</span></summary>
+      <label>Exercise</label><input list="exnames" ${a} data-k="name" value="${esc(it.name)}">
+      <div class="grid4"><div><label>Sets</label><input inputmode="numeric" ${a} data-k="sets" value="${it.sets}"></div>
+        <div><label>Reps low</label><input inputmode="numeric" ${a} data-k="lo" value="${it.lo}"></div>
+        <div><label>Reps high</label><input inputmode="numeric" ${a} data-k="hi" value="${it.hi}"></div>
+        <div><label>Rest s</label><input inputmode="numeric" ${a} data-k="rest" value="${it.rest}"></div></div>
+      <label>Load step (lb)</label><input inputmode="decimal" ${a} data-k="step" value="${it.step}">
+      <div class="grid4" style="margin-top:8px"><button data-act="mvItem" data-d="-1" ${a}>↑</button><button data-act="mvItem" data-d="1" ${a}>↓</button>
+        <button data-act="resetItem" ${a}>Reset</button><button class="danger" data-act="delItem" ${a}>Delete</button></div>
+    </details>`;
+  }
+
+  function viewReview() {
+    const inProgram = new Set(allItems().map(i => i.name));
+    const names = Object.keys(S.exercises).filter(n => ['weighted', 'assisted'].includes(kindOf(n)))
+      .sort((a, b) => (inProgram.has(b) - inProgram.has(a)) || a.localeCompare(b));
+    const any = names.find(n => S.exercises[n].start);
+    const cutoff = any && S.exercises[any].start.cutoff;
+    const row = n => {
+      const ex = S.exercises[n], st = ex.start || {};
+      return `<tr><td>${esc(n)}${kindOf(n) === 'assisted' ? ' <span class="small muted">(BW−assist)</span>' : ''}${st.flagged ? `<div class="small warn">⚠ all-time ${fmt(st.allTime)} is &gt;${S.settings.outlierRatio}× recent ${fmt(st.recent)}</div>` : ''}${ex.flagCleared ? '<div class="small muted">outlier flag cleared</div>' : ''}</td>
+        <td>${fmt(st.allTime)}</td><td>${fmt(st.recent)}</td>
+        <td><input inputmode="decimal" data-orm="${esc(n)}" value="${ex.oneRM ?? ''}" aria-label="Training 1RM">${ex.edited ? '<div class="small muted">edited</div>' : ''}</td></tr>`;
+    };
+    return `<div class="card"><button class="ghost" data-act="back">← Program</button>
+      <h2 style="margin-top:12px">Training 1RMs</h2>
+      <p class="muted small">Best Epley e1RM from working sets (1–12 reps, no warm-ups). Uses the last ${S.settings.recentWeeks} weeks of data${cutoff ? ` (since ${esc(fmtDate(cutoff))})` : ''} when available, otherwise all-time, then × ${S.settings.layoffFactor} for the layoff. Editing a value restarts that exercise's cycle.</p>
+      <button class="block" data-act="recalc">Recalculate all from history</button></div>
+      <div class="card" style="overflow-x:auto"><table><thead><tr><th>Exercise</th><th>All-time</th><th>Recent</th><th>Start 1RM</th></tr></thead>
+      <tbody>${names.map(row).join('') || '<tr><td colspan="4" class="muted">No data yet.</td></tr>'}</tbody></table></div>`;
+  }
+
+  function viewHistory() {
+    const { prs } = records();
+    const list = S.workouts.slice().reverse();
+    if (!list.length) return `<div class="card muted">No workouts yet.</div>`;
+    const card = w => {
+      const prCount = w.exercises.reduce((t, e) => t + e.sets.filter(s => prs[s.id]).length, 0);
+      return `<details class="card"><summary><span class="grow"><b>${esc(w.title)}</b><br><span class="small muted">${esc(fmtDate(w.date))} · ${w.exercises.length} exercises${w.source === 'hevy' ? ' · Hevy' : ''}</span></span>${prCount ? `<span class="badge">🏆 ${prCount}</span>` : ''}</summary>
+        ${w.exercises.map(e => `<div class="res"><b>${esc(e.name)}</b><div class="small">${e.sets.map(s => {
+          const b = (prs[s.id] || []).map(m => `<span class="badge">${PR_LABEL[m]}</span>`).join('');
+          const v = s.r > 0 ? `${fmt(s.w ?? 0)}×${s.r}` : [s.dur ? `${Math.round(s.dur / 60)} min` : '', s.dist ? `${s.dist} km` : ''].filter(Boolean).join(' ') || '—';
+          return `<span class="${s.warmup ? 'muted' : ''}">${s.warmup ? 'W ' : ''}${v}</span>${b}`;
+        }).join(' · ')}</div></div>`).join('')}
+        <button class="danger block" data-act="delWorkout" data-id="${esc(w.id)}">Delete workout</button></details>`;
+    };
+    return list.slice(0, ui.histN).map(card).join('') + (list.length > ui.histN ? `<button class="block" data-act="more">Show more (${list.length - ui.histN} left)</button>` : '');
+  }
+
+  function viewExercises() {
+    const { recs, series } = records();
+    if (ui.exName) return viewExercise(ui.exName, recs[ui.exName] || {}, series[ui.exName] || []);
+    const q = ui.q.toLowerCase();
+    const names = Object.keys(S.exercises).filter(n => n.toLowerCase().includes(q))
+      .sort((a, b) => ((series[b] || []).at(-1)?.date || '').localeCompare((series[a] || []).at(-1)?.date || ''));
+    return `<div class="card"><input data-bind="q" placeholder="Search exercises" value="${esc(ui.q)}"></div>
+      <div class="card">${names.map(n => {
+        const r = recs[n] || {}, k = kindOf(n), s = series[n] || [];
+        const best = k === 'bodyweight' ? `${r.reps ?? '—'} reps` : k === 'assisted' ? `min assist ${fmt(r.assist)}` : k === 'cardio' ? 'cardio' : `e1RM ${fmt(r.e1rm)}`;
+        return `<button class="block ghost" style="text-align:left" data-act="openEx" data-name="${esc(n)}">${esc(n)}<br><span class="small muted">${s.length} sessions · ${best}</span></button>`;
+      }).join('') || '<p class="muted">No exercises yet.</p>'}</div>`;
+  }
+  function viewExercise(name, rec, ser) {
+    const ex = ensureExercise(name), kind = kindOf(name);
+    const pts = (key) => ser.filter(p => p[key] != null).map(p => ({ x: p.date, y: p[key] }));
+    let chartHtml;
+    if (kind === 'bodyweight') chartHtml = chart([{ pts: pts('reps'), label: 'Most reps', color: 'var(--accent)' }, { pts: pts('totalReps'), label: 'Total reps', color: 'var(--muted)' }]);
+    else if (kind === 'assisted') chartHtml = chart([{ pts: pts('e1rm'), label: 'Effective e1RM', color: 'var(--accent)' }, { pts: pts('assist'), label: 'Assistance (lower = better)', color: 'var(--warn)' }]);
+    else if (kind === 'cardio') chartHtml = '<p class="muted small">No chart for cardio.</p>';
+    else chartHtml = chart([{ pts: pts('e1rm'), label: 'Best e1RM', color: 'var(--accent)' }, { pts: pts('top'), label: 'Top weight', color: 'var(--muted)' }]);
+    const opt = (v, cur) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${v}</option>`;
+    return `<div class="card"><button class="ghost" data-act="closeEx">← Exercises</button>
+      <h2 style="margin-top:12px">${esc(name)}</h2>
+      <div class="grid2"><div><label>Type</label><select data-exk="kind" data-name="${esc(name)}">${['weighted', 'bodyweight', 'assisted', 'cardio'].map(v => opt(v, kind)).join('')}</select></div>
+      <div><label>Equipment</label><select data-exk="equipment" data-name="${esc(name)}">${['barbell', 'dumbbell', 'machine', 'cable', 'other'].map(v => opt(v, ex.equipment)).join('')}</select></div></div>
+      ${['weighted', 'assisted'].includes(kind) ? `<label>Training 1RM${kind === 'assisted' ? ' (effective: BW − assist)' : ''}</label><input inputmode="decimal" data-orm="${esc(name)}" value="${ex.oneRM ?? ''}">` : ''}
+    </div>
+    <div class="card"><h3>Progress</h3>${chartHtml}</div>
+    <div class="card"><h3>Records</h3><div class="kv" style="margin-top:8px">
+      ${rec.weight != null ? `<span>Heaviest</span><b>${fmt(rec.weight)} lb</b>` : ''}
+      ${rec.e1rm != null ? `<span>Best e1RM${kind === 'assisted' ? ' (effective)' : ''}</span><b>${fmt(rec.e1rm)} lb</b>` : ''}
+      ${rec.assist != null ? `<span>Lowest assistance</span><b>${fmt(rec.assist)} lb</b>` : ''}
+      ${rec.reps != null ? `<span>Most reps</span><b>${rec.reps}</b>` : ''}
+      <span>Sessions</span><b>${ser.length}</b></div></div>
+    <div class="card"><h3>Recent sessions</h3>${ser.slice(-10).reverse().map(p => `<div class="res small"><b>${esc(fmtDate(p.date))}</b> · ${p.sets} sets · ${p.totalReps} reps${p.top != null ? ` · top ${fmt(p.top)}` : ''}${p.assist != null ? ` · assist ${fmt(p.assist)}` : ''}${p.e1rm != null ? ` · e1RM ${fmt(p.e1rm)}` : ''}</div>`).join('') || '<p class="muted small">None.</p>'}</div>`;
+  }
+  function chart(seriesList) {
+    const S2 = seriesList.filter(s => s.pts.length);
+    if (!S2.length || S2[0].pts.length < 2) return '<p class="muted small">Need at least 2 sessions for a chart.</p>';
+    const W = 340, H = 190, P = { l: 40, r: 10, t: 12, b: 26 };
+    const all = S2.flatMap(s => s.pts);
+    const xs = all.map(p => WL.keyToDate(p.x).getTime());
+    const x0 = Math.min(...xs), x1 = Math.max(...xs);
+    let y0 = Math.min(...all.map(p => p.y)), y1 = Math.max(...all.map(p => p.y));
+    const pad = (y1 - y0) * 0.1 || 5; y0 = Math.max(0, y0 - pad); y1 += pad;
+    const sx = t => P.l + (x1 === x0 ? 0.5 : (t - x0) / (x1 - x0)) * (W - P.l - P.r);
+    const sy = v => P.t + (1 - (v - y0) / (y1 - y0)) * (H - P.t - P.b);
+    let g = '';
+    for (let k = 0; k <= 3; k++) {
+      const v = y0 + (y1 - y0) * k / 3, y = sy(v);
+      g += `<line x1="${P.l}" x2="${W - P.r}" y1="${y}" y2="${y}" stroke="#2c323e"/><text x="${P.l - 6}" y="${y + 4}" fill="#9aa3b2" font-size="10" text-anchor="end">${Math.round(v)}</text>`;
+    }
+    const d0 = WL.keyToDate(all.reduce((m, p) => p.x < m ? p.x : m, all[0].x)), d1 = WL.keyToDate(all.reduce((m, p) => p.x > m ? p.x : m, all[0].x));
+    const short = d => d.toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+    g += `<text x="${P.l}" y="${H - 6}" fill="#9aa3b2" font-size="10">${short(d0)}</text><text x="${W - P.r}" y="${H - 6}" fill="#9aa3b2" font-size="10" text-anchor="end">${short(d1)}</text>`;
+    const lines = S2.map((s, si) => {
+      const pts = s.pts.map(p => `${sx(WL.keyToDate(p.x).getTime()).toFixed(1)},${sy(p.y).toFixed(1)}`);
+      return `<polyline fill="none" stroke="${s.color}" stroke-width="${si ? 1.5 : 2.5}" ${si ? 'stroke-dasharray="4 3"' : ''} points="${pts.join(' ')}"/>` +
+        (si ? '' : pts.map(p => `<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="2.5" fill="${s.color}"/>`).join(''));
+    }).join('');
+    const legend = S2.map(s => `<span style="color:${s.color}">■</span> ${esc(s.label)}`).join(' &nbsp; ');
+    return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Progress chart">${g}${lines}</svg><div class="small muted">${legend}</div>`;
+  }
+
+  function viewSettings() {
+    const st = S.settings, hasKey = !!getApiKey();
+    const lastBw = S.bodyweights.at(-1);
+    return `<div class="card"><h2>Body &amp; progression</h2>
+        <label>Current bodyweight (lb), used for assisted exercises</label><input inputmode="decimal" data-set="bodyweight" value="${st.bodyweight ?? ''}">
+        <div class="small muted" style="margin-top:4px">${lastBw ? `Latest measurement: ${fmt(lastBw.w)} lb on ${esc(fmtDate(lastBw.date))}` : 'No measurements imported.'}</div>
+        <div class="grid2"><div><label>Layoff factor</label><input inputmode="decimal" data-set="layoffFactor" value="${st.layoffFactor}"></div>
+        <div><label>Recent window (weeks)</label><input inputmode="numeric" data-set="recentWeeks" value="${st.recentWeeks}"></div>
+        <div><label>Outlier ratio</label><input inputmode="decimal" data-set="outlierRatio" value="${st.outlierRatio}"></div>
+        <div><label>Default rest (s)</label><input inputmode="numeric" data-set="defaultRest" value="${st.defaultRest}"></div></div>
+      </div>
+      <div class="card"><h2>Import from Hevy (CSV)</h2>
+        <p class="muted small">Select <b>workout_data.csv</b> and optionally <b>measurement_data.csv</b> (both at once is fine). Re-importing merges without duplicates. Files are read only in this browser.</p>
+        <input type="file" id="csvFile" accept=".csv,text/csv" multiple>
+      </div>
+      <div class="card"><h2>Hevy API sync (optional)</h2>
+        <p class="muted small">Needs Hevy Pro. Get a key at hevy.com/settings?developer. The key is stored only in this browser's localStorage. It is never exported, and it is only sent to api.hevyapp.com when you tap Sync.</p>
+        <label>API key</label><input type="password" id="apiKey" autocomplete="off" placeholder="${hasKey ? 'Key saved in this browser' : 'Paste API key'}">
+        <div class="grid2" style="margin-top:8px"><button data-act="saveKey">Save key</button><button data-act="clearKey" ${hasKey ? '' : 'disabled'}>Clear key</button></div>
+        <button class="primary block" data-act="sync" ${hasKey ? '' : 'disabled'}>Sync now</button>
+        ${ui.syncMsg ? `<p class="small muted">${esc(ui.syncMsg)}</p>` : ''}
+      </div>
+      <div class="card"><h2>Backup</h2>
+        <p class="muted small">JSON with workouts, program, 1RMs, progression and all settings (not the API key).</p>
+        <button class="primary block" data-act="export">Export JSON</button>
+        <label>Import JSON backup</label><input type="file" id="jsonFile" accept=".json,application/json">
+      </div>
+      <div class="card"><h2>Danger zone</h2><button class="danger block" data-act="wipe">Erase all data</button></div>
+      <p class="small muted" style="text-align:center">${S.workouts.length} workouts · ${Object.keys(S.exercises).length} exercises</p>`;
+  }
+
+  // ---- Session actions ----
+  function startSession(day) {
+    const date = `${ui.startDate || today()}T${WL.localKey(new Date()).slice(11)}`;
+    S.active = { date, title: day ? day.name : 'Workout', dayId: day ? day.id : null, exercises: [] };
+    if (day) for (const it of day.items) {
+      ensureExercise(it.name);
+      const kind = kindOf(it.name), p = getProg(it);
+      let w = kind === 'bodyweight' ? 0 : p.weight;
+      if (w == null) { const ls = lastSession(it.name); w = ls ? ls.sets[0].w : null; }
+      S.active.exercises.push({ name: it.name, itemId: it.id, rest: it.rest || S.settings.defaultRest,
+        sets: Array.from({ length: it.sets }, () => ({ w, r: p.reps, warmup: false, done: false })) });
+    }
+    save(); render();
+  }
+  function addAdhoc(name) {
+    name = (name || '').trim();
+    if (!name) return;
+    ensureExercise(name);
+    const ls = lastSession(name);
+    const sets = ls ? ls.sets.map(s => ({ w: s.w, r: s.r, warmup: false, done: false })) : [1, 2, 3].map(() => ({ w: null, r: null, warmup: false, done: false }));
+    S.active.exercises.push({ name, itemId: null, rest: S.settings.defaultRest, sets });
+    save(); render();
+  }
+  function describe(name, kind, cfg, before, r, oldRM) {
+    const u = w => kind === 'bodyweight' ? 'BW' : `${fmt(w)} lb${kind === 'assisted' ? ' assist' : ''}`;
+    const p = r.prog;
+    switch (r.action) {
+      case 'reps-up': return `All ${cfg.sets} sets hit ${before.reps} reps → next ${u(p.weight)} × ${p.reps}`;
+      case 'cycle-up': return `Top of range hit → 1RM ${fmt(oldRM)} → ${fmt(r.oneRM)}; new cycle ${u(p.weight)} × ${p.reps}`;
+      case 'hold': return `Target missed → hold ${u(p.weight)} × ${p.reps} (${r.total} total reps)`;
+      case 'stall': return `No rep improvement at ${u(before.weight)} → stall ${p.stalls}/3`;
+      case 'deload': return `3 stalls → deload 10%: 1RM ${fmt(r.oneRM)}, restart ${u(p.weight)} × ${p.reps}`;
+      default: return '';
+    }
+  }
+  async function finishSession() {
+    const a = S.active, bw = currentBW();
+    const done = a.exercises.some(e => e.sets.some(s => s.done && (s.r > 0)));
+    if (!done) { toast('No completed sets yet. Tap ✓ on a set first.'); return; }
+    if (!await confirmBox('Finish and save this workout? Progression will update.', 'Finish')) return;
+    let id = WL.workoutId(a.date, a.title || 'Workout');
+    while (S.workouts.some(w => w.id === id)) id += '+';
+    const w = { id, date: a.date, title: a.title || 'Workout', source: 'app', exercises: [] };
+    const occ = {}, results = [];
+    for (const ex of a.exercises) {
+      const sets = ex.sets.filter(s => s.done && s.r > 0).map(s => ({ w: WL.num(s.w) ?? 0, r: WL.num(s.r), warmup: !!s.warmup, done: true }));
+      if (!sets.length) continue;
+      const o = occ[ex.name] = (occ[ex.name] ?? -1) + 1;
+      sets.forEach((s, j) => { s.id = `${id}|${ex.name}|${o}|${j}`; });
+      w.exercises.push({ name: ex.name, occ: o, sets });
+      const E = ensureExercise(ex.name), it = ex.itemId && findItem(ex.itemId), kind = kindOf(ex.name);
+      if (!it || kind === 'cardio') continue;
+      const before = getProg(it);
+      if (before.weight == null && kind !== 'bodyweight') {
+        // First session without a 1RM: seed from this session.
+        const W = sets.filter(WL.isWorking);
+        if (!W.length) continue;
+        let e1 = 0;
+        W.forEach(s => { const L = WL.loadOf(kind, s.w, bw); if (L > 0) e1 = Math.max(e1, WL.epley(L, s.r)); });
+        if (e1) { E.oneRM = WL.round(e1, 1); S.progs[it.id] = WL.newCycle(kind, E.oneRM, it, bw); }
+        else S.progs[it.id] = WL.freshProg(Math.min(...W.map(s => s.w || 0)), it.lo);
+        results.push({ name: ex.name, text: `Training 1RM set to ${fmt(E.oneRM)} → next ${fmt(S.progs[it.id].weight)} × ${it.lo}` });
+        continue;
+      }
+      const r = WL.evaluateSession(kind, it, before, E.oneRM, sets, bw);
+      if (!r) continue;
+      const oldRM = E.oneRM;
+      S.progs[it.id] = r.prog;
+      if (r.oneRM != null) E.oneRM = r.oneRM;
+      results.push({ name: ex.name, text: describe(ex.name, kind, it, before, r, oldRM), e1: r.e1rm });
+    }
+    S.workouts.push(w); S.workouts.sort(WL.byDate);
+    S.active = null; save();
+    const { prs } = records();
+    const prList = w.exercises.flatMap(e => e.sets.filter(s => prs[s.id]).map(s => `${e.name}: ${prs[s.id].map(m => PR_LABEL[m]).join(', ')} (${fmt(s.w)}×${s.r})`));
+    stopTimer(); render();
+    await modal(`<h2>Workout saved 💪</h2>
+      ${prList.length ? `<h3>🏆 Personal records</h3>${prList.map(t => `<div class="res small">${esc(t)}</div>`).join('')}` : ''}
+      <h3 style="margin-top:10px">Progression</h3>
+      ${results.map(r => `<div class="res"><b>${esc(r.name)}</b>${r.e1 ? ` <span class="small muted">e1RM ${fmt(r.e1)}</span>` : ''}<div class="small">${esc(r.text)}</div></div>`).join('') || '<p class="muted small">No program exercises to progress.</p>'}`,
+      [{ label: 'Done', value: true, cls: 'primary' }]);
+  }
+
+  // ---- Import / export / sync ----
+  function afterHistoryChange() {
+    ensureAllExercises();
+    applyStarting1RMs(false);
+    let drafted = false;
+    if (!S.program.days.length && S.workouts.length) { S.program = WL.draftProgram(S.workouts, kindOf); S.progs = {}; drafted = true; }
+    save();
+    return drafted;
+  }
+  function applyMeasurements(list) {
+    S.bodyweights = WL.mergeBodyweights(S.bodyweights, list);
+    const last = S.bodyweights.at(-1);
+    if (last && !S.settings.bodyweightManual) S.settings.bodyweight = WL.round(last.w, 1);
+  }
+  async function importCSVFiles(files) {
+    let msg = [];
+    for (const f of files) {
+      const text = await f.text();
+      const head = text.slice(0, 500);
+      if (/exercise_title/.test(head)) {
+        const incoming = WL.parseHevyWorkoutsCSV(text);
+        const r = WL.mergeWorkouts(S.workouts, incoming);
+        S.workouts = r.workouts;
+        msg.push(`${r.added} new workouts${r.addedSets ? `, ${r.addedSets} new sets in existing ones` : ''} (${incoming.length} in file)`);
+      } else if (/"?date"?/.test(head) && /weight_lbs/.test(head)) {
+        const m = WL.parseMeasurements(text);
+        applyMeasurements(m);
+        msg.push(`${m.length} bodyweight entries`);
+      } else msg.push(`${f.name}: not a Hevy export`);
+    }
+    const drafted = afterHistoryChange();
+    toast(msg.join(' · ') + (drafted ? ' · Program drafted' : ''), 4500);
+    if (drafted) { ui.tab = 'program'; ui.view = 'review'; }
+    render();
+  }
+  function exportJSON() {
+    const data = { app: 'workout-log', version: 1, exportedAt: new Date().toISOString(), state: S };
+    const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `workout-log-backup-${today()}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+  async function importJSON(file) {
+    let obj;
+    try { obj = JSON.parse(await file.text()); } catch (e) { toast('Not valid JSON.'); return; }
+    if (!obj || obj.app !== 'workout-log' || !obj.state || !Array.isArray(obj.state.workouts)) { toast('Not a workout-log backup.'); return; }
+    const inc = WL.normalize(obj.state);
+    const mode = await modal(`<h2>Import backup</h2><p class="small">${inc.workouts.length} workouts, ${inc.program.days.length} program days.</p>
+      <p class="small muted"><b>Merge</b> adds missing workouts, exercises and measurements and keeps your current program and settings. <b>Replace</b> overwrites everything.</p>`,
+      [{ label: 'Cancel', value: null }, { label: 'Merge', value: 'merge', cls: 'primary' }, { label: 'Replace', value: 'replace', cls: 'danger' }]);
+    if (!mode) return;
+    if (mode === 'replace') {
+      if (!await confirmBox('Replace ALL current data with this backup?', 'Replace', 'danger')) return;
+      S = inc;
+    } else {
+      const r = WL.mergeWorkouts(S.workouts, inc.workouts);
+      S.workouts = r.workouts;
+      for (const [n, e] of Object.entries(inc.exercises)) if (!S.exercises[n]) S.exercises[n] = e;
+      if (!S.program.days.length && inc.program.days.length) { S.program = inc.program; S.progs = { ...inc.progs }; }
+      applyMeasurements(inc.bodyweights);
+      if (S.settings.bodyweight == null) S.settings.bodyweight = inc.settings.bodyweight;
+      toast(`Merged: ${r.added} new workouts, ${r.addedSets} sets`);
+    }
+    save(); render();
+  }
+  function getApiKey() { try { return localStorage.getItem(APIKEY) || ''; } catch (e) { return ''; } }
+  async function hevySync() {
+    const key = getApiKey();
+    if (!key) return;
+    if (!await confirmBox('Fetch your workouts from api.hevyapp.com now? Your API key is sent only to Hevy.', 'Sync')) return;
+    ui.syncMsg = 'Syncing…'; render();
+    const incoming = [];
+    try {
+      const known = new Set(S.workouts.map(w => w.id));
+      let page = 1, pages = 1;
+      while (page <= pages && page <= 500) {
+        const res = await fetch(`https://api.hevyapp.com/v1/workouts?page=${page}&pageSize=10`, { headers: { 'api-key': key, accept: 'application/json' } });
+        if (res.status === 404 && page > 1) break;
+        if (!res.ok) throw new Error(res.status === 401 || res.status === 403 ? 'API key rejected (needs Hevy Pro?)' : `Hevy API error ${res.status}`);
+        const j = await res.json();
+        pages = j.page_count || 1;
+        const batch = (j.workouts || []).map(WL.fromHevyApi);
+        incoming.push(...batch);
+        ui.syncMsg = `Syncing… page ${page}/${pages}`; render();
+        if (known.size && batch.length && batch.every(w => known.has(w.id))) break; // caught up with what we have
+        page++;
+      }
+      const r = WL.mergeWorkouts(S.workouts, incoming);
+      S.workouts = r.workouts;
+      afterHistoryChange();
+      ui.syncMsg = `Synced ${new Date().toLocaleString()}: ${r.added} new workouts, ${r.addedSets} sets.`;
+    } catch (e) {
+      ui.syncMsg = `Sync failed: ${e.message}`;
+    }
+    render();
+  }
+
+  // ---- Events ----
+  const actions = {
+    tab: b => { ui.tab = b.dataset.tab; ui.view = null; if (b.dataset.tab !== 'exercises') ui.exName = null; render(); window.scrollTo(0, 0); },
+    startDay: b => startSession(S.program.days.find(d => d.id === b.dataset.id)),
+    startEmpty: () => startSession(null),
+    addEx: b => addAdhoc(b.dataset.name || ($('#addExName') || {}).value),
+    toggleWarm: b => { const s = S.active.exercises[+b.dataset.i].sets[+b.dataset.j]; s.warmup = !s.warmup; save(); render(); },
+    done: b => {
+      const ex = S.active.exercises[+b.dataset.i], s = ex.sets[+b.dataset.j];
+      s.done = !s.done; save(); render();
+      if (s.done) startTimer(ex.rest || S.settings.defaultRest);
+    },
+    addSet: b => {
+      const ex = S.active.exercises[+b.dataset.i], last = [...ex.sets].reverse().find(s => !s.warmup) || ex.sets.at(-1) || {};
+      ex.sets.push({ w: last.w ?? null, r: last.r ?? null, warmup: false, done: false }); save(); render();
+    },
+    addWarm: b => {
+      const ex = S.active.exercises[+b.dataset.i], first = ex.sets.find(s => !s.warmup) || {};
+      const it = ex.itemId && findItem(ex.itemId);
+      const w = first.w > 0 && kindOf(ex.name) === 'weighted' ? WL.roundToStep(first.w * 0.5, (it && it.step) || 5) : first.w ?? null;
+      const k = ex.sets.findIndex(s => !s.warmup);
+      ex.sets.splice(k < 0 ? ex.sets.length : k, 0, { w, r: 8, warmup: true, done: false }); save(); render();
+    },
+    delSet: b => { const ex = S.active.exercises[+b.dataset.i]; ex.sets.pop(); save(); render(); },
+    delEx: async b => { if (await confirmBox('Remove this exercise from the workout?', 'Remove', 'danger')) { S.active.exercises.splice(+b.dataset.i, 1); save(); render(); } },
+    finish: () => finishSession(),
+    discard: async () => { if (await confirmBox('Discard this workout? Nothing will be saved.', 'Discard', 'danger')) { S.active = null; save(); stopTimer(); render(); } },
+    timerOpen: () => startTimer(S.settings.timerPreset || 90),
+    tadd: b => { T.end = Math.max(Date.now(), T.end) + (+b.dataset.s) * 1000; T.beeped = false; T.hideAt = 0; tick(); },
+    tstop: () => stopTimer(),
+    tpreset: b => { S.settings.timerPreset = +b.dataset.s; save(); startTimer(+b.dataset.s); },
+    draft: async () => {
+      if (!S.workouts.length) { toast('Import your Hevy history first (Settings).'); return; }
+      if (S.program.days.length && !await confirmBox('Replace your current program with a draft from your Hevy history?', 'Replace')) return;
+      S.program = WL.draftProgram(S.workouts, kindOf); S.progs = {}; save(); render(); toast('Program drafted. Everything is editable.');
+    },
+    review: () => { ui.view = 'review'; render(); },
+    back: () => { ui.view = null; render(); },
+    recalc: async () => { if (await confirmBox('Recalculate every training 1RM from history (overwrites your edits and restarts cycles)?', 'Recalculate', 'danger')) { applyStarting1RMs(true); save(); render(); } },
+    addDay: () => { S.program.days.push({ id: WL.uid(), name: `Day ${S.program.days.length + 1}`, items: [] }); save(); render(); },
+    delDay: async b => { if (await confirmBox('Delete this day?', 'Delete', 'danger')) { S.program.days.splice(+b.dataset.di, 1); save(); render(); } },
+    addItem: b => { S.program.days[+b.dataset.di].items.push({ id: WL.uid(), name: '', sets: 3, lo: 8, hi: 12, rest: S.settings.defaultRest, step: 5 }); save(); render(); },
+    delItem: b => { const d = S.program.days[+b.dataset.di]; const [it] = d.items.splice(+b.dataset.ii, 1); delete S.progs[it.id]; save(); render(); },
+    mvItem: b => {
+      const items = S.program.days[+b.dataset.di].items, i = +b.dataset.ii, j = i + (+b.dataset.d);
+      if (j < 0 || j >= items.length) return;
+      [items[i], items[j]] = [items[j], items[i]]; save(); render();
+    },
+    resetItem: b => { delete S.progs[S.program.days[+b.dataset.di].items[+b.dataset.ii].id]; save(); render(); toast('Cycle restarted from current 1RM.'); },
+    delWorkout: async b => { if (await confirmBox('Delete this workout permanently?', 'Delete', 'danger')) { S.workouts = S.workouts.filter(w => w.id !== b.dataset.id); save(); render(); } },
+    more: () => { ui.histN += 30; render(); },
+    openEx: b => { ui.exName = b.dataset.name; render(); window.scrollTo(0, 0); },
+    closeEx: () => { ui.exName = null; render(); },
+    saveKey: () => {
+      const v = ($('#apiKey').value || '').trim();
+      if (!v) { toast('Paste a key first.'); return; }
+      try { localStorage.setItem(APIKEY, v); toast('Key saved in this browser only.'); } catch (e) { toast('Could not save key.'); }
+      render();
+    },
+    clearKey: () => { try { localStorage.removeItem(APIKEY); } catch (e) { /* ignore */ } toast('Key removed.'); render(); },
+    sync: () => hevySync(),
+    export: () => exportJSON(),
+    wipe: async () => {
+      if (!await confirmBox('Erase ALL workouts, program and settings from this browser? Export a backup first if unsure.', 'Erase', 'danger')) return;
+      S = WL.defaultState(); save(); render();
+    },
+  };
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]');
+    if (b && actions[b.dataset.act]) { e.preventDefault(); actions[b.dataset.act](b, e); }
+  });
+  document.addEventListener('input', e => {
+    const t = e.target;
+    if (t.dataset.f && S.active) {
+      const s = S.active.exercises[+t.dataset.i].sets[+t.dataset.j];
+      s[t.dataset.f] = WL.num(t.value);
+      save(); refreshLive(+t.dataset.i);
+    } else if (t.dataset.bind === 'q') {
+      ui.q = t.value;
+      const pos = t.selectionStart; render();
+      const n = document.querySelector('[data-bind="q"]'); if (n) { n.focus(); n.setSelectionRange(pos, pos); }
+    } else if (t.dataset.bind === 'activeTitle' && S.active) { S.active.title = t.value; save(); }
+  });
+  document.addEventListener('change', e => {
+    const t = e.target;
+    if (t.dataset.bind === 'startDate') { ui.startDate = t.value || today(); return; }
+    if (t.dataset.pd != null) { S.program.days[+t.dataset.pd].name = t.value.trim() || 'Day'; save(); render(); return; }
+    if (t.dataset.di != null && t.dataset.k) {
+      const it = S.program.days[+t.dataset.di].items[+t.dataset.ii], k = t.dataset.k;
+      if (k === 'name') { it.name = t.value.trim(); ensureExercise(it.name); delete S.progs[it.id]; }
+      else {
+        const v = WL.num(t.value);
+        if (v == null || v <= 0) { render(); return; }
+        it[k] = k === 'step' ? v : Math.round(v);
+        if (it.hi < it.lo) it.hi = it.lo;
+        if (k === 'lo' || k === 'step') delete S.progs[it.id];
+        else if (k === 'hi' && S.progs[it.id] && S.progs[it.id].reps > it.hi) S.progs[it.id].reps = it.hi;
+      }
+      save(); render(); return;
+    }
+    if (t.dataset.orm != null) {
+      const ex = ensureExercise(t.dataset.orm), v = WL.num(t.value);
+      ex.oneRM = v > 0 ? v : null; ex.edited = true; resetProgsFor(ex.name); save(); render(); return;
+    }
+    if (t.dataset.exk) { const ex = ensureExercise(t.dataset.name); ex[t.dataset.exk] = t.value; if (t.dataset.exk === 'kind') resetProgsFor(ex.name); save(); render(); return; }
+    if (t.dataset.set) {
+      const v = WL.num(t.value);
+      if (t.dataset.set === 'bodyweight') { S.settings.bodyweight = v > 0 ? v : null; S.settings.bodyweightManual = v > 0; }
+      else if (v > 0) S.settings[t.dataset.set] = v;
+      save(); render(); return;
+    }
+    if (t.id === 'csvFile' && t.files.length) { importCSVFiles([...t.files]); return; }
+    if (t.id === 'jsonFile' && t.files[0]) { importJSON(t.files[0]); t.value = ''; }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
